@@ -14,22 +14,16 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 public class CrptApi {
-    private final TimeUnit timeUnit;
     private final int requestLimit;
-    private int requestCount = 0;
-
     private final Semaphore requestSemaphore;
     private final ScheduledExecutorService scheduler; //интерфейс выполнения задач по расписанию.
 
 
-
-
     public CrptApi(TimeUnit timeUnit, int requestLimit) {
-        this.timeUnit = timeUnit;
         this.requestLimit = requestLimit;
 
         this.requestSemaphore = new Semaphore(requestLimit);
-        this.scheduler = Executors.newScheduledThreadPool(4); //создаём планировщик с 4 потоками.
+        this.scheduler = Executors.newScheduledThreadPool(4); //создаём планировщик с 1 потоком.
         scheduler.scheduleAtFixedRate(this::resetSemaphore, 0, 1, timeUnit); //раз в 1 ед. времени вызываем освобождение всех разрешений семафора.
     }
 
@@ -48,8 +42,6 @@ public class CrptApi {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             System.out.println("Документ: " + document + " - прервано");
-        } finally {
-            requestSemaphore.release(); // освобождаем разрешение
         }
     }
 
@@ -59,7 +51,7 @@ public class CrptApi {
         try {
             String apiUrl = "https://ismp.crpt.ru/api/v3/lk/documents/create";
             HttpClient httpClient = HttpClients.createDefault();
-            System.out.println("Документ: " + document + " - запрос к api");
+            System.out.println("Документ: " + document + " - запрос");
             HttpPost httpPost = new HttpPost(apiUrl);
 
             //установка хедеров и тела запроса
@@ -84,7 +76,7 @@ public class CrptApi {
     }
 
     public static void main(String[] args) {
-        CrptApi crptApi = new CrptApi(TimeUnit.SECONDS, 10);
+        CrptApi crptApi = new CrptApi(TimeUnit.MINUTES, 10);
 
         // Example usage
         for (int i = 0; i < 15; i++) {
