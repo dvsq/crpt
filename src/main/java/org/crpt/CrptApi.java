@@ -23,7 +23,7 @@ public class CrptApi {
         this.requestLimit = requestLimit;
 
         this.requestSemaphore = new Semaphore(requestLimit);
-        this.scheduler = Executors.newScheduledThreadPool(4); //создаём планировщик с 1 потоком.
+        this.scheduler = Executors.newScheduledThreadPool(1); //создаём планировщик с 1 потоком.
         scheduler.scheduleAtFixedRate(this::resetSemaphore, 0, 1, timeUnit); //раз в 1 ед. времени вызываем освобождение всех разрешений семафора.
     }
 
@@ -31,7 +31,6 @@ public class CrptApi {
     private void resetSemaphore() {
         int usedPermits = requestLimit - requestSemaphore.availablePermits();
         requestSemaphore.release(usedPermits);
-        System.out.println("Освобождение " + usedPermits + " разрешений.");
     }
 
     public void createDocument(String document, String signature) {
@@ -41,7 +40,6 @@ public class CrptApi {
             sendApiRequest(document, signature);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            System.out.println("Документ: " + document + " - прервано");
         }
     }
 
